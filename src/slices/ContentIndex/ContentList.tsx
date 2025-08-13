@@ -113,9 +113,10 @@ export default function ContentList({
 
   const contentImages = items.map((item) => {
     // Cek field 'image' (untuk Blog Post) atau 'hover_image' (untuk Proyek)
-    const imageField = isFilled.image(item.data.image)
-      ? item.data.image
-      : item.data.hover_image;
+    const imageField =
+      "image" in item.data && isFilled.image(item.data.image)
+        ? item.data.image
+        : item.data.hover_image;
 
     const image = isFilled.image(imageField)
       ? imageField
