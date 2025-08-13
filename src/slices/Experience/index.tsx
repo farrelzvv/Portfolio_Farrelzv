@@ -76,7 +76,9 @@ const Experience = ({ slice }: ExperienceProps): JSX.Element => {
             </div>
 
             <div
-              ref={(el) => (contentRefs.current[index] = el)}
+              ref={(el) => {
+                contentRefs.current[index] = el;
+              }}
               className="h-0 overflow-hidden opacity-0"
               style={{ height: 0 }} // Set initial height to 0
             >
