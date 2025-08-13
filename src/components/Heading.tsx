@@ -18,10 +18,10 @@ export default function Heading({
       className={clsx(
         "font-bold leading-tight tracking-tight  text-slate-300",
         // Mengubah ukuran font untuk size "xl"
-        size === "xl" && "text-5xl md:text-6xl", // Sebelumnya: text-7xl md:text-9xl
-        size === "lg" && "text-4xl md:text-5xl",
+        size === "xl" && "text-3xl md:text-6xl", // Sebelumnya: text-7xl md:text-9xl
+        size === "lg" && "text-3xl md:text-5xl",
         size === "md" && "text-3xl md:text-5xl",
-        size === "sm" && "text-2xl md:text-5xl",
+        size === "sm" && "text-3xl md:text-5xl",
         className,
       )}
     >
