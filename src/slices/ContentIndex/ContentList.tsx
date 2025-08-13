@@ -35,7 +35,7 @@ export default function ContentList({
   useEffect(() => {
     // Animate list-items in with a stagger
     let ctx = gsap.context(() => {
-      itemsRef.current.forEach((item, index) => {
+      itemsRef.current.forEach((item) => {
         gsap.fromTo(
           item,
           {
@@ -112,11 +112,14 @@ export default function ContentList({
   };
 
   const contentImages = items.map((item) => {
-    // Cek field 'image' (untuk Blog Post) atau 'hover_image' (untuk Proyek)
-    const imageField =
-      "image" in item.data && isFilled.image(item.data.image)
-        ? item.data.image
-        : item.data.hover_image;
+    let imageField;
+
+    // Type guard to check if the item is a ProjectDocument
+    if (item.type === "project") {
+      imageField = item.data.hover_image;
+    } else {
+      imageField = item.data.image;
+    }
 
     const image = isFilled.image(imageField)
       ? imageField
@@ -149,7 +152,9 @@ export default function ContentList({
         {items.map((post, index) => (
           <li
             key={index}
-            ref={(el) => (itemsRef.current[index] = el)}
+            ref={(el) => {
+              itemsRef.current[index] = el;
+            }}
             onMouseEnter={() => onMouseEnter(index)}
             className="list-item opacity-0"
           >
