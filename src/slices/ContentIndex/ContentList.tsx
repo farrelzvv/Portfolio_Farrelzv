@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { asImageSrc, isFilled } from "@prismicio/client";
+import { asImageSrc, isFilled, ImageField } from "@prismicio/client";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MdArrowOutward } from "react-icons/md";
@@ -25,10 +25,13 @@ export default function ContentList({
   const component = useRef(null);
   const itemsRef = useRef<Array<HTMLLIElement | null>>([]);
 
-  const revealRef = useRef(null);
+  const revealRef = useRef<HTMLDivElement>(null);
   const [currentItem, setCurrentItem] = useState<null | number>(null);
   const [hovering, setHovering] = useState(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
+  
+  // State baru untuk menyimpan dimensi gambar yang di-hover
+  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
 
   const urlPrefix = contentType === "Blogs" ? "/blog" : "/project";
 
@@ -71,22 +74,16 @@ export default function ContentList({
 
       let ctx = gsap.context(() => {
         // Animate the image holder
-        if (currentItem !== null) {
-          const maxY = window.scrollY + window.innerHeight - 350;
-          const maxX = window.innerWidth - 250;
+        if (currentItem !== null && revealRef.current) {
+          const maxY = window.scrollY + window.innerHeight - imageDimensions.height;
+          const maxX = window.innerWidth - imageDimensions.width;
 
           gsap.to(revealRef.current, {
-            x: gsap.utils.clamp(0, maxX, mousePos.x - 110),
-            y: gsap.utils.clamp(0, maxY, mousePos.y - 160),
+            x: gsap.utils.clamp(0, maxX, mousePos.x - imageDimensions.width / 2),
+            y: gsap.utils.clamp(0, maxY, mousePos.y - imageDimensions.height / 2),
             rotation: speed * (mousePos.x > lastMousePos.current.x ? 1 : -1), // Apply rotation based on speed and direction
             ease: "back.out(2)",
             duration: 1.3,
-          });
-          gsap.to(revealRef.current, {
-            opacity: hovering ? 1 : 0,
-            visibility: "visible",
-            ease: "power3.out",
-            duration: 0.4,
           });
         }
         lastMousePos.current = mousePos;
@@ -99,16 +96,51 @@ export default function ContentList({
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [hovering, currentItem]);
+  }, [hovering, currentItem, imageDimensions]);
+
+  useEffect(() => {
+    // Animate opacity and visibility based on hovering state
+    let ctx = gsap.context(() => {
+      gsap.to(revealRef.current, {
+        opacity: hovering ? 1 : 0,
+        visibility: hovering ? "visible" : "hidden",
+        ease: "power3.out",
+        duration: 0.4,
+      });
+    }, component);
+    return () => ctx.revert();
+  }, [hovering]);
+
 
   const onMouseEnter = (index: number) => {
+    const item = items[index];
+    if (!item) return;
+
+    let imageField: ImageField | undefined;
+    if (item.type === "project") {
+      imageField = item.data.hover_image;
+    } else {
+      imageField = item.data.image;
+    }
+
+    const image = isFilled.image(imageField) ? imageField : fallbackItemImage;
+
+    if (image && image.dimensions) {
+      const { width, height } = image.dimensions;
+      const maxWidth = 300; // Batas lebar maksimum
+      
+      if (width && height) {
+        const ratio = height / width;
+        setImageDimensions({ width: maxWidth, height: maxWidth * ratio });
+      }
+    }
+    
     setCurrentItem(index);
     if (!hovering) setHovering(true);
   };
 
   const onMouseLeave = () => {
     setHovering(false);
-    setCurrentItem(null);
   };
 
   const contentImages = items.map((item) => {
@@ -125,12 +157,7 @@ export default function ContentList({
       ? imageField
       : fallbackItemImage;
       
-    return asImageSrc(image, {
-      fit: "crop",
-      w: 220,
-      h: 320,
-      exp: -10,
-    });
+    return asImageSrc(image); // Ambil URL asli tanpa mengubah ukuran
   });
 
   // Preload images
@@ -141,7 +168,7 @@ export default function ContentList({
       img.src = url;
     });
   }, [contentImages]);
-
+  
   return (
     <>
       <ul
@@ -182,8 +209,10 @@ export default function ContentList({
 
         {/* Hover element */}
         <div
-          className="hover-reveal pointer-events-none absolute left-0 top-0 -z-10 h-[320px] w-[220px] rounded-lg bg-cover bg-center opacity-0 transition-[background] duration-300"
+          className="hover-reveal pointer-events-none absolute left-0 top-0 -z-10 rounded-lg bg-cover bg-center opacity-0 transition-[background] duration-300"
           style={{
+            width: `${imageDimensions.width}px`,
+            height: `${imageDimensions.height}px`,
             backgroundImage:
               currentItem !== null ? `url(${contentImages[currentItem]})` : "",
           }}
