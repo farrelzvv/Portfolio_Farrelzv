@@ -29,13 +29,15 @@ export default function NavBar({
     <nav aria-label="Main navigation" className="relative z-50">
       {/* Navbar utama untuk Desktop */}
       <div className="mx-auto max-w-7xl">
-        <ul className="flex flex-col justify-between rounded-b-lg bg-slate-50 px-4 py-2 backdrop-blur-md md:m-4 md:flex-row md:items-center md:rounded-xl">
+        {/* Latar belakang putih dihapus dari sini agar efek glass dari parent terlihat */}
+        <ul className="flex flex-col justify-between px-4 py-2 md:flex-row md:items-center">
           <div className="flex items-center justify-between">
             <NameLogo name={settings.data.name} />
             <button
               aria-expanded={open}
               aria-label="Open menu"
-              className="block p-2 text-2xl text-slate-800 md:hidden"
+              // Warna ikon diubah menjadi terang
+              className="block p-2 text-2xl text-slate-100 md:hidden"
               onClick={() => setOpen(true)}
             >
               <MdMenu />
@@ -48,14 +50,16 @@ export default function NavBar({
       {/* Panel Menu Mobile (dipisahkan dari navbar utama) */}
       <div
         className={clsx(
-          "fixed bottom-0 left-0 right-0 top-0 z-50 flex flex-col items-end gap-4 bg-white pr-4 pt-14 shadow-2xl transition-transform duration-300 ease-in-out md:hidden",
+          // Latar belakang diubah menjadi gelap dan transparan
+          "fixed bottom-0 left-0 right-0 top-0 z-50 flex flex-col items-end gap-4 bg-slate-900/90 backdrop-blur-xl pr-4 pt-14 shadow-2xl transition-transform duration-300 ease-in-out md:hidden",
           open ? "translate-x-0" : "translate-x-[100%]",
         )}
       >
         <button
           aria-label="Close menu"
           aria-expanded={open}
-          className="fixed right-4 top-3 block p-2 text-2xl text-slate-800 md:hidden "
+          // Warna ikon diubah menjadi terang
+          className="fixed right-4 top-3 block p-2 text-2xl text-slate-100 md:hidden "
           onClick={() => setOpen(false)}
         >
           <MdClose />
@@ -71,7 +75,8 @@ function NameLogo({ name }: { name: KeyTextField }) {
     <Link
       href="/"
       aria-label="Home page"
-      className="text-xl font-extrabold tracking-tighter text-slate-900"
+      // Warna teks diubah menjadi terang
+      className="text-xl font-extrabold tracking-tighter text-slate-100"
     >
       {name}
     </Link>
@@ -106,16 +111,18 @@ function DesktopMenu({
         <React.Fragment key={label}>
           {label === "Projects" ? (
             <li ref={dropdownRef} className="relative">
-              <button 
+              <button
                 onClick={() => setDropdownOpen((prev) => !prev)}
-                className="group relative flex items-center gap-1 overflow-hidden rounded px-3 py-1 text-base font-bold text-slate-900"
+                // Warna teks diubah menjadi terang
+                className="group relative flex items-center gap-1 overflow-hidden rounded px-3 py-1 text-base font-bold text-slate-100"
               >
                 <span className="relative">Projects</span>
                 <MdArrowDropDown className={clsx("transition-transform", isDropdownOpen && "rotate-180")} />
               </button>
-              <div 
+              <div
                 className={clsx(
-                  "absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 origin-top rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 transition-all duration-300",
+                  // Latar belakang dropdown diubah menjadi gelap dan transparan
+                  "absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 origin-top rounded-md bg-slate-800/90 backdrop-blur-sm shadow-lg ring-1 ring-white/10 transition-all duration-300",
                   isDropdownOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                 )}
               >
@@ -125,7 +132,8 @@ function DesktopMenu({
                       key={category.uid}
                       href={`/projects/${category.uid}`}
                       onClick={() => setDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      // Warna teks dropdown diubah menjadi terang
+                      className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-700/80"
                     >
                       {category.name}
                     </Link>
@@ -137,7 +145,8 @@ function DesktopMenu({
             <li>
               <PrismicNextLink
                 className={clsx(
-                  "group relative block overflow-hidden rounded px-3 py-1 text-base font-bold text-slate-900",
+                  // Warna teks diubah menjadi terang
+                  "group relative block overflow-hidden rounded px-3 py-1 text-base font-bold text-slate-100",
                 )}
                 field={link}
                 aria-current={
@@ -146,7 +155,7 @@ function DesktopMenu({
               >
                 <span
                   className={clsx(
-                    "absolute inset-0 z-0 h-full rounded bg-yellow-300 transition-transform  duration-300 ease-in-out group-hover:translate-y-0",
+                    "absolute inset-0 z-0 h-full rounded bg-yellow-300 transition-transform  duration-300 ease-in-out group-hover:translate-y-0",
                     pathname.includes(asLink(link) as string)
                       ? "translate-y-6"
                       : "translate-y-8",
@@ -194,21 +203,24 @@ function MobileMenu({
         <React.Fragment key={label}>
           {label === "Projects" ? (
             <li className="w-full text-right">
-              <button 
+              <button
                 onClick={() => setMobileDropdownOpen((prev) => !prev)}
-                className="group relative flex items-center justify-end w-full overflow-hidden rounded px-3 text-3xl font-bold text-slate-900"
+                // Warna teks diubah menjadi terang
+                className="group relative flex items-center justify-end w-full overflow-hidden rounded px-3 text-3xl font-bold text-slate-100"
               >
                 <span className="relative">Projects</span>
                 <MdArrowDropDown className={clsx("transition-transform duration-300", isMobileDropdownOpen && "rotate-180")} />
               </button>
               <div className={clsx("overflow-hidden transition-all duration-300 ease-in-out", isMobileDropdownOpen ? "max-h-96" : "max-h-0")}>
-                <div className="mt-2 flex flex-col items-end pr-4 bg-slate-100 rounded-lg py-2">
+                {/* Latar belakang dropdown diubah menjadi gelap */}
+                <div className="mt-2 flex flex-col items-end pr-4 bg-slate-800/50 rounded-lg py-2">
                   {projectCategories.map((category) => (
                     <Link
                       key={category.uid}
                       href={`/projects/${category.uid}`}
                       onClick={() => setOpen(false)}
-                      className="block py-2 text-lg text-slate-600 hover:text-slate-900"
+                      // Warna teks dropdown diubah menjadi terang
+                      className="block py-2 text-lg text-slate-300 hover:text-slate-100"
                     >
                       {category.name}
                     </Link>
@@ -220,7 +232,8 @@ function MobileMenu({
             <li className="first:mt-8">
               <PrismicNextLink
                 className={clsx(
-                  "group relative block overflow-hidden rounded px-3 text-3xl font-bold text-slate-900 ",
+                  // Warna teks diubah menjadi terang
+                  "group relative block overflow-hidden rounded px-3 text-3xl font-bold text-slate-100 ",
                 )}
                 field={link}
                 onClick={() => setOpen(false)}

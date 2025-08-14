@@ -104,8 +104,7 @@ export function Shapes() {
         </Suspense>
       </Canvas>
     </div>
-  ) : null; // Jika bukan desktop, jangan render apapun
+  ) : null; 
 }
 
-// Preload model agar tidak ada jeda saat pertama kali ditampilkan
 useGLTF.preload("/farrelzv.glb");
