@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom"; // Import ReactDOM untuk Portal
 import { Content, KeyTextField, asLink } from "@prismicio/client";
 import { PrismicNextLink } from "@prismicio/next";
 import Link from "next/link";
@@ -17,6 +18,95 @@ const projectCategories = [
   { name: "Project & Program Management", uid: "project-program-management" },
 ];
 
+// Komponen baru untuk Panel Menu Mobile yang akan di-render di Portal
+function MobileMenuPanel({ settings, pathname, open, setOpen }: { settings: Content.SettingsDocument; pathname: string; open: boolean; setOpen: (open: boolean) => void; }) {
+  const [isMobileDropdownOpen, setMobileDropdownOpen] = useState(false);
+  const [isBrowser, setIsBrowser] = useState(false);
+
+  useEffect(() => {
+    setIsBrowser(true); // Pastikan kode hanya berjalan di browser
+  }, []);
+
+  const menuContent = (
+    <>
+      {/* Backdrop untuk menu mobile */}
+      <div
+        className={clsx(
+          "fixed inset-0 z-[998] bg-slate-900/50 backdrop-blur-sm transition-opacity md:hidden",
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* Panel Menu Mobile yang bergeser */}
+      <div
+        className={clsx(
+          "fixed bottom-0 right-0 top-0 z-[999] flex h-full w-full max-w-sm flex-col p-6 pt-16 transition-transform duration-300 ease-in-out md:hidden",
+          open ? "translate-x-0" : "translate-x-[100%]",
+        )}
+      >
+        <button
+          aria-label="Close menu"
+          aria-expanded={open}
+          className="absolute right-4 top-3 block p-2 text-2xl text-slate-100 md:hidden"
+          onClick={() => setOpen(false)}
+        >
+          <MdClose />
+        </button>
+        <ul className="flex w-full flex-col gap-6 rounded-xl bg-slate-900 p-6 shadow-xl">
+          {settings.data.nav_item.map(({ link, label }) => (
+            <React.Fragment key={label}>
+              {label === "Projects" ? (
+                <li className="w-full">
+                  <button
+                    onClick={() => setMobileDropdownOpen((prev) => !prev)}
+                    className="group relative flex w-full items-center justify-between overflow-hidden rounded px-3 text-3xl font-bold text-slate-100"
+                  >
+                    <span className="relative">Projects</span>
+                    <MdArrowDropDown className={clsx("transition-transform duration-300", isMobileDropdownOpen && "rotate-180")} />
+                  </button>
+                  <div className={clsx("overflow-hidden transition-all duration-300 ease-in-out", isMobileDropdownOpen ? "max-h-96" : "max-h-0")}>
+                    <div className="mt-4 flex flex-col items-start rounded-lg bg-slate-800 p-4 pl-6">
+                      {projectCategories.map((category) => (
+                        <Link
+                          key={category.uid}
+                          href={`/projects/${category.uid}`}
+                          onClick={() => setOpen(false)}
+                          className="block w-full py-2 text-left text-lg text-slate-300 hover:text-slate-100"
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </li>
+              ) : (
+                <li className="w-full">
+                  <PrismicNextLink
+                    className={clsx("group relative block overflow-hidden rounded px-3 text-3xl font-bold text-slate-100 ")}
+                    field={link}
+                    onClick={() => setOpen(false)}
+                    aria-current={pathname.includes(asLink(link) as string) ? "page" : undefined}
+                  >
+                    <span className={clsx("absolute inset-0 z-0 h-full translate-y-12 rounded bg-yellow-300 transition-transform duration-300 ease-in-out group-hover:translate-y-0", pathname.includes(asLink(link) as string) ? "translate-y-6" : "translate-y-18")} />
+                    <span className="relative">{label}</span>
+                  </PrismicNextLink>
+                </li>
+              )}
+            </React.Fragment>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+
+  if (isBrowser) {
+    return ReactDOM.createPortal(menuContent, document.body);
+  } else {
+    return null;
+  }
+}
+
 export default function NavBar({
   settings,
 }: {
@@ -26,17 +116,15 @@ export default function NavBar({
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Main navigation" className="relative z-50">
+    <nav aria-label="Main navigation">
       {/* Navbar utama untuk Desktop */}
       <div className="mx-auto max-w-7xl">
-        {/* Latar belakang putih dihapus dari sini agar efek glass dari parent terlihat */}
         <ul className="flex flex-col justify-between px-4 py-2 md:flex-row md:items-center">
           <div className="flex items-center justify-between">
             <NameLogo name={settings.data.name} />
             <button
               aria-expanded={open}
               aria-label="Open menu"
-              // Warna ikon diubah menjadi terang
               className="block p-2 text-2xl text-slate-100 md:hidden"
               onClick={() => setOpen(true)}
             >
@@ -47,25 +135,8 @@ export default function NavBar({
         </ul>
       </div>
 
-      {/* Panel Menu Mobile (dipisahkan dari navbar utama) */}
-      <div
-        className={clsx(
-          // Latar belakang diubah menjadi gelap dan transparan
-          "fixed bottom-0 left-0 right-0 top-0 z-50 flex flex-col items-end gap-4 bg-slate-900/90 backdrop-blur-xl pr-4 pt-14 shadow-2xl transition-transform duration-300 ease-in-out md:hidden",
-          open ? "translate-x-0" : "translate-x-[100%]",
-        )}
-      >
-        <button
-          aria-label="Close menu"
-          aria-expanded={open}
-          // Warna ikon diubah menjadi terang
-          className="fixed right-4 top-3 block p-2 text-2xl text-slate-100 md:hidden "
-          onClick={() => setOpen(false)}
-        >
-          <MdClose />
-        </button>
-        <MobileMenu settings={settings} pathname={pathname} setOpen={setOpen} />
-      </div>
+      {/* Memanggil komponen Portal untuk menu mobile */}
+      <MobileMenuPanel settings={settings} pathname={pathname} open={open} setOpen={setOpen} />
     </nav>
   );
 }
@@ -75,7 +146,6 @@ function NameLogo({ name }: { name: KeyTextField }) {
     <Link
       href="/"
       aria-label="Home page"
-      // Warna teks diubah menjadi terang
       className="text-xl font-extrabold tracking-tighter text-slate-100"
     >
       {name}
@@ -113,7 +183,6 @@ function DesktopMenu({
             <li ref={dropdownRef} className="relative">
               <button
                 onClick={() => setDropdownOpen((prev) => !prev)}
-                // Warna teks diubah menjadi terang
                 className="group relative flex items-center gap-1 overflow-hidden rounded px-3 py-1 text-base font-bold text-slate-100"
               >
                 <span className="relative">Projects</span>
@@ -121,7 +190,6 @@ function DesktopMenu({
               </button>
               <div
                 className={clsx(
-                  // Latar belakang dropdown diubah menjadi gelap dan transparan
                   "absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 origin-top rounded-md bg-slate-800/90 backdrop-blur-sm shadow-lg ring-1 ring-white/10 transition-all duration-300",
                   isDropdownOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
                 )}
@@ -132,7 +200,6 @@ function DesktopMenu({
                       key={category.uid}
                       href={`/projects/${category.uid}`}
                       onClick={() => setDropdownOpen(false)}
-                      // Warna teks dropdown diubah menjadi terang
                       className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-700/80"
                     >
                       {category.name}
@@ -145,31 +212,18 @@ function DesktopMenu({
             <li>
               <PrismicNextLink
                 className={clsx(
-                  // Warna teks diubah menjadi terang
                   "group relative block overflow-hidden rounded px-3 py-1 text-base font-bold text-slate-100",
                 )}
                 field={link}
-                aria-current={
-                  pathname.includes(asLink(link) as string) ? "page" : undefined
-                }
+                aria-current={pathname.includes(asLink(link) as string) ? "page" : undefined}
               >
-                <span
-                  className={clsx(
-                    "absolute inset-0 z-0 h-full rounded bg-yellow-300 transition-transform  duration-300 ease-in-out group-hover:translate-y-0",
-                    pathname.includes(asLink(link) as string)
-                      ? "translate-y-6"
-                      : "translate-y-8",
-                  )}
-                />
+                <span className={clsx("absolute inset-0 z-0 h-full rounded bg-yellow-300 transition-transform  duration-300 ease-in-out group-hover:translate-y-0", pathname.includes(asLink(link) as string) ? "translate-y-6" : "translate-y-8")} />
                 <span className="relative">{label}</span>
               </PrismicNextLink>
             </li>
           )}
           {index < settings.data.nav_item.length - 1 && (
-            <span
-              className="hidden text-4xl font-thin leading-[0] text-slate-400 md:inline"
-              aria-hidden="true"
-            >
+            <span className="hidden text-4xl font-thin leading-[0] text-slate-400 md:inline" aria-hidden="true">
               /
             </span>
           )}
@@ -183,80 +237,5 @@ function DesktopMenu({
         />
       </li>
     </div>
-  );
-}
-
-function MobileMenu({
-  settings,
-  pathname,
-  setOpen
-}: {
-  settings: Content.SettingsDocument;
-  pathname: string;
-  setOpen: (value: boolean) => void;
-}) {
-  const [isMobileDropdownOpen, setMobileDropdownOpen] = useState(false);
-
-  return (
-    <ul className="flex flex-col items-end gap-4 w-full">
-      {settings.data.nav_item.map(({ link, label }) => (
-        <React.Fragment key={label}>
-          {label === "Projects" ? (
-            <li className="w-full text-right">
-              <button
-                onClick={() => setMobileDropdownOpen((prev) => !prev)}
-                // Warna teks diubah menjadi terang
-                className="group relative flex items-center justify-end w-full overflow-hidden rounded px-3 text-3xl font-bold text-slate-100"
-              >
-                <span className="relative">Projects</span>
-                <MdArrowDropDown className={clsx("transition-transform duration-300", isMobileDropdownOpen && "rotate-180")} />
-              </button>
-              <div className={clsx("overflow-hidden transition-all duration-300 ease-in-out", isMobileDropdownOpen ? "max-h-96" : "max-h-0")}>
-                {/* Latar belakang dropdown diubah menjadi gelap */}
-                <div className="mt-2 flex flex-col items-end pr-4 bg-slate-800/50 rounded-lg py-2">
-                  {projectCategories.map((category) => (
-                    <Link
-                      key={category.uid}
-                      href={`/projects/${category.uid}`}
-                      onClick={() => setOpen(false)}
-                      // Warna teks dropdown diubah menjadi terang
-                      className="block py-2 text-lg text-slate-300 hover:text-slate-100"
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </li>
-          ) : (
-            <li className="first:mt-8">
-              <PrismicNextLink
-                className={clsx(
-                  // Warna teks diubah menjadi terang
-                  "group relative block overflow-hidden rounded px-3 text-3xl font-bold text-slate-100 ",
-                )}
-                field={link}
-                onClick={() => setOpen(false)}
-                aria-current={
-                  pathname.includes(asLink(link) as string)
-                    ? "page"
-                    : undefined
-                }
-              >
-                <span
-                  className={clsx(
-                    "absolute inset-0 z-0 h-full translate-y-12 rounded bg-yellow-300 transition-transform duration-300 ease-in-out group-hover:translate-y-0",
-                    pathname.includes(asLink(link) as string)
-                      ? "translate-y-6"
-                      : "translate-y-18",
-                  )}
-                />
-                <span className="relative">{label}</span>
-              </PrismicNextLink>
-            </li>
-          )}
-        </React.Fragment>
-      ))}
-    </ul>
   );
 }
